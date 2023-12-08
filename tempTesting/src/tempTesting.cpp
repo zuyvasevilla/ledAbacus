@@ -1,5 +1,5 @@
 /* 
- * Project Abacus Testing Program 
+ * Project Temperature Testing Program 
  * Author: Zuyva Sevilla
  * Date: NOV 27 2023
  */
@@ -36,7 +36,15 @@ String decimalToBaseX(int number, int base);
 
 const int relayPin = 9;
 bool relayBool;
-
+//Temp
+Adafruit_BME280 bme;
+int BMEstatus;
+int BMEhex = 0x76;
+int tempC;
+int tempK;
+String tempK_8;
+char pCent = 0x25;
+char degree = 0xF8;
 //Time
 int previousMillis, currentMillis;
 const int countingInterval = 500;
@@ -54,6 +62,11 @@ void setup() {
     display.setRotation(0);
     delay(500);
     display.clearDisplay();
+        
+    BMEstatus = bme.begin(BMEhex);
+ 	  if (BMEstatus==false){
+    	Serial.printf("BME280 at address 0x%02X failed to start", BMEhex);
+ 		}
 
     strip.begin();  // Init NeoPixels
     strip.setBrightness(255);
@@ -63,7 +76,7 @@ void setup() {
     relayBool = 0;
     
     previousMillis = millis();
-    theDecimal = 16777205;//random(36985,97179);
+    theDecimal = random(36985,97179);
 
     Serial.printf("READY\n");
 }
@@ -71,11 +84,13 @@ void setup() {
 void loop() {
     currentMillis = millis();
     strip.clear();
-    
-    if (currentMillis - previousMillis >= countingInterval) { 
-        previousMillis = currentMillis;
+    digitalWrite(relayPin, relayBool);
 
-        theOctal = decimalToBaseX(theDecimal, 8);
+    tempC = bme.readTemperature();
+  	tempK = tempC+273;
+    theOctal = decimalToBaseX(tempK, 8);
+
+        //theOctal = decimalToBaseX(theDecimal, 8);
 
 
         for (placeIndex= 0; placeIndex < theOctal.length(); placeIndex++) {
@@ -85,13 +100,13 @@ void loop() {
 
             for (pixel = 0; pixel <= digitValue; pixel++) {
                 pixelIndex = pixelArray[placeIndex][pixel];
-                strip.setPixelColor(pixelIndex, 0,255,0); //the appropriate number of pixels ON in each place column 
+                strip.setPixelColor(pixelIndex, 0,0,255); //the appropriate number of pixels ON in each place column 
             }
 
         }
 
         for(zeroIndex=0;zeroIndex<8;zeroIndex++){ // set the zero-th pixel a different color
-        strip.setPixelColor(pixelArray[zeroIndex][0], 70,200,0); 
+        strip.setPixelColor(pixelArray[zeroIndex][0], 70,20,200); 
         }
         strip.show();
 
@@ -100,15 +115,10 @@ void loop() {
         display.setTextSize(2);
         display.setTextColor(WHITE);
         display.setCursor(0,0);
-        display.printf("Decimal:\n%i\nOctal:\n%s", theDecimal, theOctal.c_str());
+        display.printf("Kelvin Decimal:\n%i\nKelvin Octal:\n%s", tempK, theOctal.c_str());
         display.display();
 
-        // Increment the number for the next iteration
-        theDecimal++;
-        if (theDecimal >= 16777215) {
-            theDecimal = 0; // max number (base8:77777777) in decimal
-        }
-    }
+
 }
 
 String decimalToBaseX(int number, int base){
