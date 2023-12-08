@@ -115,14 +115,14 @@ String decimalToBaseX(int number, int base){
     String result;
     String remainder;
 
-    if (number == 0) {
+    if (number == 0) {               //shout-out to 0 for being the only exception
         result = "0";
     }
 
-    while(number > 0) {
-        remainder = String(number % base); // Convert remainder to String
-        result = remainder + result;
-        number = number/base;
+    while(number > 0) {              //Keep cycling through until quotient reaches 0
+        remainder = number % base;   // divide decimal by base number, keep remainder
+        result = remainder + result; //combine remainders together in one string
+        number = number / base;      //divide decimal by base number, keep quotient
     }
 
     return result;
